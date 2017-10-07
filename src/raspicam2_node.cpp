@@ -75,8 +75,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <semaphore.h>
 
-
-const int IMG_BUFFER_SIZE = 10 * 1024 * 1024;
 /// Camera number to use - we only have one camera, indexed from 0.
 #define CAMERA_NUMBER 0
 
@@ -92,6 +90,102 @@ const int IMG_BUFFER_SIZE = 10 * 1024 * 1024;
 /// Video render needs at least 2 buffers.
 #define VIDEO_OUTPUT_BUFFERS_NUM 3
 
+void encoder_buffer_callback_wrapper(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
+
+class RasPiCamPublisher : public rclcpp::Node {
+public:
+  RasPiCamPublisher() : Node("raspicam2") {
+    init_cam(&state_srv); // will need to figure out how to handle start and stop with dynamic reconfigure
+    pub_img = this->create_publisher<sensor_msgs::msg::CompressedImage>("image/compressed");
+    start_capture(&state_srv);
+  }
+
+  ~RasPiCamPublisher() {
+    close_cam(&state_srv);
+  }
+
+  /**
+ *  buffer header callback function for encoder
+ *
+ *  Callback will dump buffer data to the specific file
+ *
+ * @param port Pointer to port from which callback originated
+ * @param buffer mmal buffer header pointer
+ */
+  void encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
+  {
+    MMAL_BUFFER_HEADER_T *new_buffer;
+    int complete = 0;
+
+    // We pass our file handle and other stuff in via the userdata field.
+
+    PORT_USERDATA *pData = (PORT_USERDATA *)port->userdata;
+    if (pData && pData->pstate->isInit)
+    {
+
+        int bytes_written = buffer->length;
+        if (buffer->length)
+        {
+          if (pData->id != INT_MAX) {
+              if (pData->id + buffer->length > IMG_BUFFER_SIZE) {
+                  pData->id = INT_MAX; // mark this frame corrupted
+              } else {
+                  mmal_buffer_header_mem_lock(buffer);
+                  memcpy(&(pData->buffer[pData->frame & 1][pData->id]), buffer->data, buffer->length);
+              pData->id += bytes_written;
+                  mmal_buffer_header_mem_unlock(buffer);
+              }
+          }
+        }
+
+        if (bytes_written != buffer->length)
+        {
+          vcos_log_error("Failed to write buffer data (%d from %d)- aborting", bytes_written, buffer->length);
+          pData->abort = 1;
+        }
+        if (buffer->flags & (MMAL_BUFFER_HEADER_FLAG_FRAME_END | MMAL_BUFFER_HEADER_FLAG_TRANSMISSION_FAILED))
+          complete = 1;
+
+    if (complete){
+        if (pData->id != INT_MAX) {
+          if (skip_frames > 0 && frames_skipped < skip_frames) {
+            frames_skipped++;
+          } else {
+            frames_skipped = 0;
+            sensor_msgs::msg::CompressedImage msg;
+            msg.format = "jpeg";
+            msg.data.insert( msg.data.end(), pData->buffer[pData->frame & 1], &(pData->buffer[pData->frame & 1][pData->id]) );
+            pub_img->publish(msg);
+            pData->frame++;
+          }
+      }
+      pData->id = 0;
+    }
+    }
+
+    // release buffer back to the pool
+    mmal_buffer_header_release(buffer);
+
+    // and send one back to the port (if still open)
+    if (port->is_enabled)
+    {
+        MMAL_STATUS_T status;
+
+        new_buffer = mmal_queue_get(pData->pstate->encoder_pool->queue);
+
+        if (new_buffer)
+          status = mmal_port_send_buffer(port, new_buffer);
+
+        if (!new_buffer || status != MMAL_SUCCESS) {
+          vcos_log_error("Unable to return a buffer to the encoder port");
+        }
+    }
+  }
+
+  rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr pub_img;
+
+private:
+static const int IMG_BUFFER_SIZE = 10 * 1024 * 1024;
 
 int mmal_status_to_int(MMAL_STATUS_T status);
 
@@ -117,7 +211,6 @@ typedef struct
 } RASPIVID_STATE;
 
 RASPIVID_STATE state_srv;
-rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr pub_img;
 int skip_frames = 0;
 int frames_skipped = 0;
 
@@ -165,87 +258,6 @@ static void get_status(RASPIVID_STATE *state)
    // Set up the camera_parameters to default
    raspicamcontrol_set_defaults(&state->camera_parameters);
 }
-
-
-/**
- *  buffer header callback function for encoder
- *
- *  Callback will dump buffer data to the specific file
- *
- * @param port Pointer to port from which callback originated
- * @param buffer mmal buffer header pointer
- */
-static void encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
-{
-   MMAL_BUFFER_HEADER_T *new_buffer;
-   int complete = 0;
-
-   // We pass our file handle and other stuff in via the userdata field.
-
-   PORT_USERDATA *pData = (PORT_USERDATA *)port->userdata;
-   if (pData && pData->pstate->isInit)
-   {
-
-      int bytes_written = buffer->length;
-      if (buffer->length)
-      {
-        if (pData->id != INT_MAX) {
-             if (pData->id + buffer->length > IMG_BUFFER_SIZE) {
-                 pData->id = INT_MAX; // mark this frame corrupted
-             } else {
-                 mmal_buffer_header_mem_lock(buffer);
-                 memcpy(&(pData->buffer[pData->frame & 1][pData->id]), buffer->data, buffer->length);
-		         pData->id += bytes_written;
-                 mmal_buffer_header_mem_unlock(buffer);
-             }
-        }
-      }
-
-      if (bytes_written != buffer->length)
-      {
-         vcos_log_error("Failed to write buffer data (%d from %d)- aborting", bytes_written, buffer->length);
-         pData->abort = 1;
-      }
-      if (buffer->flags & (MMAL_BUFFER_HEADER_FLAG_FRAME_END | MMAL_BUFFER_HEADER_FLAG_TRANSMISSION_FAILED))
-         complete = 1;
-
-	if (complete){
-	    if (pData->id != INT_MAX) {
-		    if (skip_frames > 0 && frames_skipped < skip_frames) {
-			    frames_skipped++;
-		    } else {
-			    frames_skipped = 0;
-			    sensor_msgs::msg::CompressedImage msg;
-			    msg.format = "jpeg";
-			    msg.data.insert( msg.data.end(), pData->buffer[pData->frame & 1], &(pData->buffer[pData->frame & 1][pData->id]) );
-          pub_img->publish(msg);
-			    pData->frame++;
-		    }
-		}
-		pData->id = 0;
-	}
-   }
-
-   // release buffer back to the pool
-   mmal_buffer_header_release(buffer);
-
-   // and send one back to the port (if still open)
-   if (port->is_enabled)
-   {
-      MMAL_STATUS_T status;
-
-      new_buffer = mmal_queue_get(pData->pstate->encoder_pool->queue);
-
-      if (new_buffer)
-         status = mmal_port_send_buffer(port, new_buffer);
-
-      if (!new_buffer || status != MMAL_SUCCESS) {
-         vcos_log_error("Unable to return a buffer to the encoder port");
-      }
-   }
-}
-
-
 
 /**
  * Create the camera component, set up its ports
@@ -619,7 +631,7 @@ int init_cam(RASPIVID_STATE *state)
       encoder_output_port->userdata = (struct MMAL_PORT_USERDATA_T *) callback_data_enc;
       PORT_USERDATA *pData = (PORT_USERDATA *)encoder_output_port->userdata;
       // Enable the encoder output port and tell it its callback function
-      status = mmal_port_enable(encoder_output_port, encoder_buffer_callback);
+      status = mmal_port_enable(encoder_output_port, encoder_buffer_callback_wrapper);
       if (status != MMAL_SUCCESS)
       {
          return 1;
@@ -713,17 +725,18 @@ int close_cam(RASPIVID_STATE *state){
 	}else return 1;
 }
 
+}; // node
+
+// work-around for C function pointer for C++ methods
+// https://isocpp.org/wiki/faq/pointers-to-members#memfnptr-vs-fnptr
+RasPiCamPublisher* picam;
+void encoder_buffer_callback_wrapper(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
+  picam->encoder_buffer_callback(port, buffer);
+}
+
 int main(int argc, char **argv){
   rclcpp::init(argc, argv);
-  auto node = rclcpp::node::Node::make_shared("raspicam_node");
-
-  init_cam(&state_srv); // will need to figure out how to handle start and stop with dynamic reconfigure
-
-  pub_img = node->create_publisher<sensor_msgs::msg::CompressedImage>("image/compressed");
-
-  start_capture(&state_srv);
-  rclcpp::spin(node);
-  close_cam(&state_srv);
+  rclcpp::spin(std::make_shared<RasPiCamPublisher>());
   rclcpp::shutdown();
   return 0;
 }
