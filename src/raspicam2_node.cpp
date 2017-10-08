@@ -90,8 +90,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /// Video render needs at least 2 buffers.
 #define VIDEO_OUTPUT_BUFFERS_NUM 3
 
-void encoder_buffer_callback_wrapper(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer);
-
 class RasPiCamPublisher : public rclcpp::Node {
 public:
   RasPiCamPublisher() : Node("raspicam2") {
@@ -112,7 +110,7 @@ public:
  * @param port Pointer to port from which callback originated
  * @param buffer mmal buffer header pointer
  */
-  void encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
+  static void encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
   {
     MMAL_BUFFER_HEADER_T *new_buffer;
     int complete = 0;
@@ -148,14 +146,14 @@ public:
 
     if (complete){
         if (pData->id != INT_MAX) {
-          if (skip_frames > 0 && frames_skipped < skip_frames) {
-            frames_skipped++;
+          if (pData->pThis->skip_frames > 0 && pData->pThis->frames_skipped < pData->pThis->skip_frames) {
+            pData->pThis->frames_skipped++;
           } else {
-            frames_skipped = 0;
+            pData->pThis->frames_skipped = 0;
             sensor_msgs::msg::CompressedImage msg;
             msg.format = "jpeg";
             msg.data.insert( msg.data.end(), pData->buffer[pData->frame & 1], &(pData->buffer[pData->frame & 1][pData->id]) );
-            pub_img->publish(msg);
+            pData->pThis->pub_img->publish(msg);
             pData->frame++;
           }
       }
@@ -223,6 +221,7 @@ typedef struct
    int abort;                           /// Set to 1 in callback if an error occurs to attempt to abort the capture
    int frame;
    int id;
+   RasPiCamPublisher* pThis;  // pointer to own class instance
 } PORT_USERDATA;
 
 static void display_valid_parameters(char *app_name);
@@ -628,10 +627,11 @@ int init_cam(RASPIVID_STATE *state)
       callback_data_enc->abort = 0;
       callback_data_enc->id = 0;
       callback_data_enc->frame = 0;
+      callback_data_enc->pThis = this;
       encoder_output_port->userdata = (struct MMAL_PORT_USERDATA_T *) callback_data_enc;
       PORT_USERDATA *pData = (PORT_USERDATA *)encoder_output_port->userdata;
       // Enable the encoder output port and tell it its callback function
-      status = mmal_port_enable(encoder_output_port, encoder_buffer_callback_wrapper);
+      status = mmal_port_enable(encoder_output_port, encoder_buffer_callback);
       if (status != MMAL_SUCCESS)
       {
          return 1;
@@ -726,13 +726,6 @@ int close_cam(RASPIVID_STATE *state){
 }
 
 }; // node
-
-// work-around for C function pointer for C++ methods
-// https://isocpp.org/wiki/faq/pointers-to-members#memfnptr-vs-fnptr
-RasPiCamPublisher* picam;
-void encoder_buffer_callback_wrapper(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer) {
-  picam->encoder_buffer_callback(port, buffer);
-}
 
 int main(int argc, char **argv){
   rclcpp::init(argc, argv);
