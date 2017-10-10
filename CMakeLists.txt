@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 14)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(class_loader REQUIRED)
 
 FIND_LIBRARY(mmal_LIBS REQUIRED NAMES mmal PATHS /opt/vc/lib)
 FIND_LIBRARY(mmalcore_LIBS REQUIRED NAMES mmal_core PATHS /opt/vc/lib)
@@ -20,11 +21,23 @@ include_directories(include /opt/vc/include)
 add_library(raspicli STATIC src/RaspiCLI.cpp)
 add_library(raspicamcontrol STATIC src/RaspiCamControl.cpp)
 
-add_executable(raspicam2_node src/raspicam2_node.cpp)
-ament_target_dependencies(raspicam2_node rclcpp sensor_msgs)
-target_link_libraries(raspicam2_node raspicamcontrol raspicli
+# composable ros node
+add_library(RasPiCamPublisherNode SHARED src/RasPiCamPublisherNode.cpp)
+ament_target_dependencies(RasPiCamPublisherNode rclcpp sensor_msgs class_loader)
+target_link_libraries(RasPiCamPublisherNode raspicamcontrol raspicli
     ${bcmhost_LIBS} ${vcos_LIBS} ${mmal_LIBS} ${mmalcore_LIBS}
-    ${mmalutil_LIBS}  ${mmalvcclient_LIBS}  ${vchostif_LIBS} )
+    ${mmalutil_LIBS} ${mmalvcclient_LIBS} ${vchostif_LIBS})
+rclcpp_register_node_plugins(RasPiCamPublisherNode "RasPiCamPublisherNode")
+
+add_executable(raspicam2_node src/raspicam2_node.cpp)
+target_link_libraries(raspicam2_node RasPiCamPublisherNode)
+
+install(TARGETS
+    RasPiCamPublisherNode
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+)
 
 install(TARGETS
     raspicam2_node
