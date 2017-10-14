@@ -98,12 +98,24 @@ void RasPiCamPublisher::get_status(RASPIVID_STATE *state) {
         return;
     }
 
+    // get parameters
+    int w, h, f, q;
+    get_parameter_or("width", w, 320);
+    get_parameter_or("height", h, 240);
+    get_parameter_or("fps", f, 90);
+    get_parameter_or("quality", q, 80);
+
+    // std::cout << "width: " << w << std::endl;
+    // std::cout << "height: " << h << std::endl;
+    // std::cout << "fps: " << w << std::endl;
+    // std::cout << "quality: " << q << std::endl;
+
     // Default everything to zero
     memset(state, 0, sizeof(RASPIVID_STATE));
-    state->width = 320;
-    state->height = 240;
-    state->quality = 80;
-    state->framerate = 90;
+    state->width = w;
+    state->height = h;
+    state->quality = q;
+    state->framerate = f;
     state->camera_parameters.hflip = 0;
     state->camera_parameters.vflip = 0;
     state->camera_parameters.shutter_speed = 0;

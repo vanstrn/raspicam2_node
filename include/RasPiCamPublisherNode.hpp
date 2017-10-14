@@ -102,7 +102,7 @@ private:
    *
    * @param state Pointer to state structure to assign defaults to
    */
-    static void get_status(RASPIVID_STATE *state);
+    void get_status(RASPIVID_STATE *state);
 
     /**
    * Create the camera component, set up its ports
