@@ -58,6 +58,12 @@ void RasPiCamPublisher::encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_H
                 } else {
                     pData->pThis->frames_skipped = 0;
                     sensor_msgs::msg::CompressedImage msg;
+                    // split timestamp into seconds and nano-seconds
+                    const int64_t tnow_ns = std::chrono::system_clock::now().time_since_epoch() / std::chrono::nanoseconds(1);
+                    const auto div = std::div(tnow_ns, int64_t(1000000000));
+                    msg.header.stamp.sec = div.quot;
+                    msg.header.stamp.nanosec = div.rem;
+                    // set raw compressed data
                     msg.format = "jpeg";
                     msg.data.insert(msg.data.end(), pData->buffer[pData->frame & 1], &(pData->buffer[pData->frame & 1][pData->id]));
                     pData->pThis->pub_img->publish(msg);
