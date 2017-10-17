@@ -32,6 +32,8 @@ rclcpp_register_node_plugins(RasPiCamPublisherNode "RasPiCamPublisherNode")
 add_executable(raspicam2_node src/raspicam2_node.cpp)
 target_link_libraries(raspicam2_node RasPiCamPublisherNode)
 
+ament_environment_hooks(${ament_cmake_package_templates_ENVIRONMENT_HOOK_LIBRARY_PATH})
+
 install(TARGETS
     RasPiCamPublisherNode
     ARCHIVE DESTINATION lib
