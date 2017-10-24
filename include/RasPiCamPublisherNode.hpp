@@ -1,7 +1,3 @@
-#define VCOS_ALWAYS_WANT_LOGGING
-
-#define VERSION_STRING "v1.2"
-
 #include "bcm_host.h"
 #include "interface/vcos/vcos.h"
 
@@ -19,17 +15,9 @@
 #include "RaspiCLI.h"
 #include "RaspiCamControl.h"
 
-/// Camera number to use - we only have one camera, indexed from 0.
-#define CAMERA_NUMBER 0
-
 // Standard port setting for the camera component
-#define MMAL_CAMERA_PREVIEW_PORT 0
 #define MMAL_CAMERA_VIDEO_PORT 1
 #define MMAL_CAMERA_CAPTURE_PORT 2
-
-// Video format information
-#define VIDEO_FRAME_RATE_NUM 30
-#define VIDEO_FRAME_RATE_DEN 1
 
 /// Video render needs at least 2 buffers.
 #define VIDEO_OUTPUT_BUFFERS_NUM 3

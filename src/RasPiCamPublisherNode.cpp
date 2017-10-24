@@ -199,7 +199,7 @@ MMAL_COMPONENT_T *RasPiCamPublisher::create_camera_component(RASPIVID_STATE *sta
     format->es->video.crop.width = state->width;
     format->es->video.crop.height = state->height;
     format->es->video.frame_rate.num = state->framerate;
-    format->es->video.frame_rate.den = VIDEO_FRAME_RATE_DEN;
+    format->es->video.frame_rate.den = 0;
 
     status = mmal_port_format_commit(video_port);
 
