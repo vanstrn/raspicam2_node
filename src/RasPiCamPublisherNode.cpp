@@ -5,6 +5,10 @@
 RasPiCamPublisher::RasPiCamPublisher() : Node("raspicam2") {
     init_cam(&state_srv);  // will need to figure out how to handle start and stop with dynamic reconfigure
     pub_img = this->create_publisher<sensor_msgs::msg::CompressedImage>("image/compressed");
+    pub_info = this->create_publisher<sensor_msgs::msg::CameraInfo>("image/camera_info");
+    srv_info = this->create_service<sensor_msgs::srv::SetCameraInfo>("set_camera_info",
+        std::bind(&RasPiCamPublisher::set_camera_info, this,
+        std::placeholders::_1, std::placeholders::_2));
     start_capture(&state_srv);
 }
 
@@ -67,6 +71,11 @@ void RasPiCamPublisher::encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_H
                     msg.format = "jpeg";
                     msg.data.insert(msg.data.end(), pData->buffer[pData->frame & 1], &(pData->buffer[pData->frame & 1][pData->id]));
                     pData->pThis->pub_img->publish(msg);
+
+                    pData->pThis->camera_info.header.stamp.sec = div.quot;
+                    pData->pThis->camera_info.header.stamp.nanosec = div.rem;
+                    pData->pThis->pub_info->publish(pData->pThis->camera_info);
+
                     pData->frame++;
                 }
             }
@@ -115,6 +124,20 @@ void RasPiCamPublisher::get_status(RASPIVID_STATE *state) {
     // std::cout << "height: " << h << std::endl;
     // std::cout << "fps: " << w << std::endl;
     // std::cout << "quality: " << q << std::endl;
+
+    // set default camera parameters for Camera Module v1
+    // https://www.raspberrypi.org/documentation/hardware/camera/
+    // camera centre: 3.76 × 2.74 mm
+    // focal length: 3.60 mm +/- 0.01
+    const double fx = (3.60 / 3.76) * w;
+    const double fy = (3.60 / 2.74) * h;
+    const double cx = w/2.0;
+    const double cy = h/2.0;
+    camera_info.width = w;
+    camera_info.height = h;
+    camera_info.k = {fx, 0,  cx,
+                     0,  fy, cy,
+                     0,   0, 1};
 
     // Default everything to zero
     memset(state, 0, sizeof(RASPIVID_STATE));
@@ -555,6 +578,14 @@ int RasPiCamPublisher::close_cam(RASPIVID_STATE *state) {
         return 0;
     } else
         return 1;
+}
+
+void RasPiCamPublisher::set_camera_info(
+    const std::shared_ptr<sensor_msgs::srv::SetCameraInfo::Request> req,
+    std::shared_ptr<sensor_msgs::srv::SetCameraInfo::Response> res)
+{
+    camera_info = req->camera_info;
+    res->success = true;
 }
 
 CLASS_LOADER_REGISTER_CLASS(RasPiCamPublisher, rclcpp::Node)

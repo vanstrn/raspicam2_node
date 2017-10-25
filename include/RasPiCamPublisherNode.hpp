@@ -11,6 +11,8 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/compressed_image.hpp>
+#include <sensor_msgs/msg/camera_info.hpp>
+#include <sensor_msgs/srv/set_camera_info.hpp>
 
 #include "RaspiCLI.h"
 #include "RaspiCamControl.h"
@@ -32,6 +34,10 @@ public:
 
 private:
     rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr pub_img;
+    rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr pub_info;
+    rclcpp::service::Service<sensor_msgs::srv::SetCameraInfo>::SharedPtr srv_info;
+
+    sensor_msgs::msg::CameraInfo camera_info;
     
     static const int IMG_BUFFER_SIZE = 10 * 1024 * 1024;
     
@@ -157,5 +163,8 @@ private:
     int start_capture(RASPIVID_STATE *state);
 
     int close_cam(RASPIVID_STATE *state);
+
+    void set_camera_info(const std::shared_ptr<sensor_msgs::srv::SetCameraInfo::Request> req,
+                         std::shared_ptr<sensor_msgs::srv::SetCameraInfo::Response> res);
 
 };  // node
