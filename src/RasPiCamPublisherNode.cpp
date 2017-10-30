@@ -65,6 +65,7 @@ void RasPiCamPublisher::encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_H
                     // split timestamp into seconds and nano-seconds
                     const int64_t tnow_ns = std::chrono::system_clock::now().time_since_epoch() / std::chrono::nanoseconds(1);
                     const auto div = std::div(tnow_ns, int64_t(1000000000));
+                    msg.header.frame_id = "camera";
                     msg.header.stamp.sec = div.quot;
                     msg.header.stamp.nanosec = div.rem;
                     // set raw compressed data
