@@ -2,7 +2,7 @@
 
 #include <class_loader/class_loader_register_macro.h>
 
-RasPiCamPublisher::RasPiCamPublisher() : Node("raspicam2") {
+RasPiCamPublisher::RasPiCamPublisher() : Node("raspicam2", "", true) {
     init_cam(&state_srv);  // will need to figure out how to handle start and stop with dynamic reconfigure
     pub_img = this->create_publisher<sensor_msgs::msg::CompressedImage>("image/compressed");
     pub_info = this->create_publisher<sensor_msgs::msg::CameraInfo>("image/camera_info");
@@ -61,16 +61,16 @@ void RasPiCamPublisher::encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_H
                     pData->pThis->frames_skipped++;
                 } else {
                     pData->pThis->frames_skipped = 0;
-                    sensor_msgs::msg::CompressedImage msg;
+                    sensor_msgs::msg::CompressedImage::UniquePtr msg(new sensor_msgs::msg::CompressedImage());
                     // split timestamp into seconds and nano-seconds
                     const int64_t tnow_ns = std::chrono::system_clock::now().time_since_epoch() / std::chrono::nanoseconds(1);
                     const auto div = std::div(tnow_ns, int64_t(1000000000));
-                    msg.header.frame_id = "camera";
-                    msg.header.stamp.sec = div.quot;
-                    msg.header.stamp.nanosec = div.rem;
+                    msg->header.frame_id = "camera";
+                    msg->header.stamp.sec = div.quot;
+                    msg->header.stamp.nanosec = div.rem;
                     // set raw compressed data
-                    msg.format = "jpeg";
-                    msg.data.insert(msg.data.end(), pData->buffer[pData->frame & 1], &(pData->buffer[pData->frame & 1][pData->id]));
+                    msg->format = "jpeg";
+                    msg->data.insert(msg->data.end(), pData->buffer[pData->frame & 1], &(pData->buffer[pData->frame & 1][pData->id]));
                     pData->pThis->pub_img->publish(msg);
 
                     pData->pThis->camera_info.header.stamp.sec = div.quot;
