@@ -27,7 +27,7 @@ ament_target_dependencies(RasPiCamPublisherNode rclcpp sensor_msgs class_loader)
 target_link_libraries(RasPiCamPublisherNode raspicamcontrol raspicli
     ${bcmhost_LIBS} ${vcos_LIBS} ${mmal_LIBS} ${mmalcore_LIBS}
     ${mmalutil_LIBS} ${mmalvcclient_LIBS} ${vchostif_LIBS})
-rclcpp_register_node_plugins(RasPiCamPublisherNode "RasPiCamPublisherNode")
+rclcpp_register_node_plugins(RasPiCamPublisherNode "RasPiCamPublisher")
 
 add_executable(raspicam2_node src/raspicam2_node.cpp)
 target_link_libraries(raspicam2_node RasPiCamPublisherNode)
