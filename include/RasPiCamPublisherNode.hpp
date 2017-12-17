@@ -35,7 +35,7 @@ public:
 private:
     rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr pub_img;
     rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr pub_info;
-    rclcpp::service::Service<sensor_msgs::srv::SetCameraInfo>::SharedPtr srv_info;
+    rclcpp::Service<sensor_msgs::srv::SetCameraInfo>::SharedPtr srv_info;
 
     sensor_msgs::msg::CameraInfo camera_info;
     
