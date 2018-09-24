@@ -1,6 +1,5 @@
 #include <RasPiCamPublisherNode.hpp>
-
-#include <class_loader/class_loader_register_macro.h>
+#include <class_loader/register_macro.hpp>
 
 RasPiCamPublisher::RasPiCamPublisher() : Node("raspicam2", "", true) {
     init_cam(&state_srv);  // will need to figure out how to handle start and stop with dynamic reconfigure
