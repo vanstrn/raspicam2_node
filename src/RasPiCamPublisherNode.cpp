@@ -1,7 +1,7 @@
 #include <RasPiCamPublisherNode.hpp>
 #include <class_loader/register_macro.hpp>
 
-RasPiCamPublisher::RasPiCamPublisher() : Node("raspicam2", "", true) {
+RasPiCamPublisher::RasPiCamPublisher() : Node("raspicam2", "camera", true) {
     init_cam(&state_srv);  // will need to figure out how to handle start and stop with dynamic reconfigure
     pub_img = this->create_publisher<sensor_msgs::msg::CompressedImage>("image/compressed");
     pub_info = this->create_publisher<sensor_msgs::msg::CameraInfo>("image/camera_info");

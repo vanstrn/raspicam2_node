@@ -1,0 +1,7 @@
+camera:
+    raspicam2:
+        ros__parameters:
+            width: 320
+            height: 240
+            fps: 90
+            quality: 80
