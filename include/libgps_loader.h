@@ -1,6 +1,5 @@
 /*
-Copyright (c) 2013, Broadcom Europe Ltd
-Copyright (c) 2013, James Hughes
+Copyright (c) 2016, Joo Aun Saw
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,31 +25,50 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef RASPICLI_H_
-#define RASPICLI_H_
+#ifndef LIBGPS_LOADER_H
+#define LIBGPS_LOADER_H
 
+#include "gps.h"
+
+// IMPORTANT: Remember to copy gps.h from gpsd when upgrading libgps version.
+#define LIBGPS_SO_VERSION     "libgps.so.22"
+
+/** Structure containing all libgps information
+ */
 typedef struct
 {
-   int id;
-   char *command;
-   char *abbrev;
-   char *help;
-   int num_parameters;
-} COMMAND_LIST;
+   char *server;
+   char *port;
 
-/// Cross reference structure, mode string against mode id
-typedef struct xref_t
-{
-   char *mode;
-   int mmal_mode;
-} XREF_T;
+   void *libgps_handle;
+   int gpsd_connected;
+   /* requires libgps (GPSD_API_MAJOR_VERSION >= 5) */
+   gps_mask_t current_mask;
+   struct gps_data_t gpsdata;
+   /* libgps functions */
+   int (*gps_read)(struct gps_data_t *);
+   bool (*gps_waiting)(const struct gps_data_t *, int);
+   int (*gps_open)(const char *, const char *, struct gps_data_t *);
+   int (*gps_close)(struct gps_data_t *);
+   const char *(*gps_errstr)(const int);
+   int (*gps_stream)(struct gps_data_t *, unsigned int, void *);
+} gpsd_info;
+
+/* libgps */
+void gpsd_init(gpsd_info *gpsd);
+int libgps_load(gpsd_info *gpsd);
+void libgps_unload(gpsd_info *gpsd);
+
+/* gpsd */
+int connect_gpsd(gpsd_info *gpsd);
+int disconnect_gpsd(gpsd_info *gpsd);
+int wait_gps_time(gpsd_info *gpsd, int timeout_s);
+int read_gps_data_once(gpsd_info *gpsd);
+
+/* helper functions */
+int deg_to_str(double f, char *buf, int buf_size);
 
 
-void raspicli_display_help(const COMMAND_LIST *commands, const int num_commands);
-int raspicli_get_command_id(const COMMAND_LIST *commands, const int num_commands, const char *arg, int *num_parameters);
+extern const char *LIBGPS_FILE;
 
-int raspicli_map_xref(const char *str, const XREF_T *map, int num_refs);
-const char *raspicli_unmap_xref(const int en, XREF_T *map, int num_refs);
-
-
-#endif
+#endif /* LIBGPS_LOADER_H */

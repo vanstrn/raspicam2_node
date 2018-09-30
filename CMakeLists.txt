@@ -18,13 +18,20 @@ FIND_LIBRARY(vchostif_LIBS REQUIRED NAMES vchostif PATHS /opt/vc/lib)
 
 include_directories(include /opt/vc/include)
 
-add_library(raspicli STATIC src/RaspiCLI.cpp)
-add_library(raspicamcontrol STATIC src/RaspiCamControl.cpp)
+add_library(raspicam_common STATIC
+    src/RaspiCamControl.c
+    src/RaspiCLI.c
+    src/RaspiPreview.c
+    src/RaspiCommonSettings.c
+    src/RaspiHelpers.c
+    src/RaspiGPS.c
+    src/libgps_loader.c
+)
 
 # composable ros node
 add_library(RasPiCamPublisherNode SHARED src/RasPiCamPublisherNode.cpp)
 ament_target_dependencies(RasPiCamPublisherNode rclcpp sensor_msgs class_loader)
-target_link_libraries(RasPiCamPublisherNode raspicamcontrol raspicli
+target_link_libraries(RasPiCamPublisherNode raspicam_common
     ${bcmhost_LIBS} ${vcos_LIBS} ${mmal_LIBS} ${mmalcore_LIBS}
     ${mmalutil_LIBS} ${mmalvcclient_LIBS} ${vchostif_LIBS})
 rclcpp_register_node_plugins(RasPiCamPublisherNode "RasPiCamPublisher")

@@ -1,6 +1,5 @@
 /*
-Copyright (c) 2013, Broadcom Europe Ltd
-Copyright (c) 2013, James Hughes
+Copyright (c) 2018, Raspberry Pi (Trading) Ltd.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,31 +25,35 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef RASPICLI_H_
-#define RASPICLI_H_
+/**
+ * \file RaspiCommonSettings.c
+ *
+ * Description
+ *
+ * Handles general settings applicable to all the camera applications
+ */
+
+#ifndef RASPIGENERALSETTINGS_H_
+#define RASPIGENERALSETTINGS_H_
+
+#include "interface/mmal/mmal_parameters_camera.h"
 
 typedef struct
 {
-   int id;
-   char *command;
-   char *abbrev;
-   char *help;
-   int num_parameters;
-} COMMAND_LIST;
+   char camera_name[MMAL_PARAMETER_CAMERA_INFO_MAX_STR_LEN]; // Name of the camera sensor
+   int width;                          /// Requested width of image
+   int height;                         /// requested height of image
+   char *filename;                     /// filename of output file
+   int cameraNum;                      /// Camera number
+   int sensor_mode;                    /// Sensor mode. 0=auto. Check docs/forum for modes selected by other values.
+   int verbose;                        /// !0 if want detailed run information
+   int gps;                            /// Add real-time gpsd output to output
 
-/// Cross reference structure, mode string against mode id
-typedef struct xref_t
-{
-   char *mode;
-   int mmal_mode;
-} XREF_T;
+} RASPICOMMONSETTINGS_PARAMETERS;
 
-
-void raspicli_display_help(const COMMAND_LIST *commands, const int num_commands);
-int raspicli_get_command_id(const COMMAND_LIST *commands, const int num_commands, const char *arg, int *num_parameters);
-
-int raspicli_map_xref(const char *str, const XREF_T *map, int num_refs);
-const char *raspicli_unmap_xref(const int en, XREF_T *map, int num_refs);
-
+void raspicommonsettings_set_defaults(RASPICOMMONSETTINGS_PARAMETERS *);
+void raspicommonsettings_dump_parameters(RASPICOMMONSETTINGS_PARAMETERS *);
+void raspicommonsettings_display_help();
+int raspicommonsettings_parse_cmdline(RASPICOMMONSETTINGS_PARAMETERS *state, const char *arg1, const char *arg2, void (*app_help)());
 
 #endif

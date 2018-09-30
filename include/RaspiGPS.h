@@ -1,6 +1,5 @@
 /*
-Copyright (c) 2013, Broadcom Europe Ltd
-Copyright (c) 2013, James Hughes
+Copyright (c) 2018, Raspberry Pi (Trading) Ltd.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -26,31 +25,23 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef RASPICLI_H_
-#define RASPICLI_H_
+#ifndef RASPIGPS_H_
+#define RASPIGPS_H_
 
-typedef struct
-{
-   int id;
-   char *command;
-   char *abbrev;
-   char *help;
-   int num_parameters;
-} COMMAND_LIST;
+#include <pthread.h>
+#include <time.h>
 
-/// Cross reference structure, mode string against mode id
-typedef struct xref_t
-{
-   char *mode;
-   int mmal_mode;
-} XREF_T;
+#include "libgps_loader.h"
 
+int raspi_gps_setup(int verbose);
+void raspi_gps_shutdown(int verbose);
 
-void raspicli_display_help(const COMMAND_LIST *commands, const int num_commands);
-int raspicli_get_command_id(const COMMAND_LIST *commands, const int num_commands, const char *arg, int *num_parameters);
+struct gps_data_t *raspi_gps_lock();
+void raspi_gps_unlock();
 
-int raspicli_map_xref(const char *str, const XREF_T *map, int num_refs);
-const char *raspicli_unmap_xref(const int en, XREF_T *map, int num_refs);
+// Return string representation of the current fix
+// The resulting pointer is allocated so will
+// need to be freed when finished with.
+char *raspi_gps_location_string();
 
-
-#endif
+#endif /* RASPIGPS_H_ */
