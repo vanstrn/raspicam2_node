@@ -145,17 +145,35 @@ void RasPiCamPublisher::get_status(RASPIVID_STATE *state) {
     state->height = h;
     state->quality = q;
     state->framerate = f;
-    state->camera_parameters.hflip = 0;
-    state->camera_parameters.vflip = 0;
-    state->camera_parameters.shutter_speed = 0;
 
     state->isInit = 0;
 
-    // Setup preview window defaults
-    // raspipreview_set_defaults(&state->preview_parameters);
-
     // Set up the camera_parameters to default
     raspicamcontrol_set_defaults(&state->camera_parameters);
+
+    get_parameter_or("sharpness", state->camera_parameters.sharpness, 0);
+    get_parameter_or("contrast", state->camera_parameters.contrast, 0);
+    get_parameter_or("brightness", state->camera_parameters.brightness, 0);
+    get_parameter_or("saturation", state->camera_parameters.saturation, 0);
+    get_parameter_or("ISO", state->camera_parameters.ISO, 0);
+    get_parameter_or("videoStabilisation", state->camera_parameters.videoStabilisation, 0);
+    get_parameter_or("exposureCompensation", state->camera_parameters.exposureCompensation, 0);
+    // get_parameter_or("exposureMode", state->camera_parameters.exposureMode, AUTO);
+    // get_parameter_or("flickerAvoidMode", state->camera_parameters.flickerAvoidMode, OFF);
+    // get_parameter_or("exposureMeterMode", state->camera_parameters.exposureMeterMode, AVERAGE);
+    // get_parameter_or("awbMode", state->camera_parameters.awbMode, AUTO);
+    // get_parameter_or("imageEffect", state->camera_parameters.imageEffect, NONE);
+    get_parameter_or("colourEffects_enable", state->camera_parameters.colourEffects.enable, 0);
+    get_parameter_or("colourEffects_u", state->camera_parameters.colourEffects.u, 128);
+    get_parameter_or("colourEffects_v", state->camera_parameters.colourEffects.v, 128);
+    get_parameter_or("rotation", state->camera_parameters.rotation, 0);
+    get_parameter_or("hflip", state->camera_parameters.hflip, 0);
+    get_parameter_or("vflip", state->camera_parameters.vflip, 0);
+    get_parameter_or("roi_x", state->camera_parameters.roi.x, 0.0);
+    get_parameter_or("roi_y", state->camera_parameters.roi.y, 0.0);
+    get_parameter_or("roi_w", state->camera_parameters.roi.w, 0.0);
+    get_parameter_or("roi_h", state->camera_parameters.roi.h, 1.0);
+    get_parameter_or("shutter_speed", state->camera_parameters.shutter_speed, 0);
 }
 
 /**
