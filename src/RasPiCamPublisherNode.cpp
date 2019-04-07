@@ -80,6 +80,12 @@ RasPiCamPublisher::RasPiCamPublisher() : Node("raspicam2", "camera", true) {
     get_parameter_or("roi_h", state->camera_parameters.roi.h, 1.0);
     get_parameter_or("shutter_speed", state->camera_parameters.shutter_speed, 0);
 
+    get_parameter_or("awb_gains_r", state->camera_parameters.awb_gains_r, 0.0f);
+    get_parameter_or("awb_gains_b", state->camera_parameters.awb_gains_b, 0.0f);
+
+    get_parameter_or("analog_gain", state->camera_parameters.awb_gains_r, 0.0f);
+    get_parameter_or("digital_gain", state->camera_parameters.awb_gains_b, 0.0f);
+
     pub_img_compressed = create_publisher<sensor_msgs::msg::CompressedImage>("image/compressed");
     pub_info = create_publisher<sensor_msgs::msg::CameraInfo>("image/camera_info");
     srv_info = create_service<sensor_msgs::srv::SetCameraInfo>("set_camera_info",

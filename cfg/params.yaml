@@ -35,27 +35,14 @@ camera:
             rotation: 0             # Set image rotation (0 - 359)
             hflip: 0                # Set horizontal flip
             vflip: 0                # Set vertical flip
-            roi_x: 0                # Set sensor region of interest, x
-            roi_y: 0                # Set sensor region of interest, y
-            roi_w: 0                # Set sensor region of interest, w
-            roi_h: 1                # Set sensor region of interest, h
+            roi_x: 0.0              # Set sensor region of interest, x
+            roi_y: 0.0              # Set sensor region of interest, y
+            roi_w: 0.0              # Set sensor region of interest, w
+            roi_h: 1.0              # Set sensor region of interest, h
             shutter_speed: 0        # Set shutter speed in microseconds, max: 6000000us, 0: auto
-            awb_gains_r: 0          # Sets red gain (as floating point numbers) to be applied when awbMode OFF
-            awb_gains_b: 0          # Sets blue gain (as floating point numbers) to be applied when awbMode OFF
-            drc_level: OFF          # Enable/disable dynamic range compression
-                                    # modes: off, low, med, high
-            stats_pass: FALSE       # Display image statistics
 
-            enable_annotate: 0      # Flag to enable the annotate, 0 = disabled, otherwise a bitmask of what needs to be displayed
-            annotate_string: ""     # String to use for annotate - overrides certain bitmask settings
-            annotate_text_size: 0   # Text size for annotation
-            annotate_text_colour: -1 # Text colour for annotation
-            annotate_bg_colour: -1  # Background colour for annotation
+            awb_gains_r: 0.0        # Sets red gain (as floating point numbers) to be applied when awbMode OFF
+            awb_gains_b: 0.0        # Sets blue gain (as floating point numbers) to be applied when awbMode OFF
+            analog_gain: 0.0        # Analog gain
+            digital_gain: 0.0       # Digital gain
 
-            stereo_mode_mode: NONE
-                                    # modes: none, side_by_side, top_bottom, max
-            stereo_mode_decimate: FALSE
-            stereo_mode_swap_eyes: FALSE
-
-            analog_gain: 0          # Analog gain
-            digital_gain: 0         # Digital gain
