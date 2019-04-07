@@ -1,12 +1,17 @@
 # raspicam_node
 
-ROS2 node for the Raspberry Pi Camera Module. Works with both the V1.x and V2.x versions of the module. We recommend using the v2.x cameras as they have better auto gain, and the general image quality is better. 
+ROS2 node for the Raspberry Pi Camera Module. Works with both the V1.x and V2.x versions of the module. We recommend using the v2.x cameras as they have better auto gain, and the general image quality is better.
 
 ## Build Intructions
-TODO
+```
+colcon build
+```
 
 ## Running the Node
-TODO
+```
+source install/setup.bash
+ros2 run raspicam2 raspicam2_node __params:=`ros2 pkg prefix raspicam2`/share/raspicam2/cfg/params.yaml
+```
 
 ## Troubleshooting
 1. Make sure that your user is in the `video` group by running `groups|grep video`.

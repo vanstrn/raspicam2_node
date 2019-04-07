@@ -1,6 +1,7 @@
 camera:
     raspicam2:
         ros__parameters:
+            image_transport: compressed
             width: 320
             height: 240
             fps: 90
