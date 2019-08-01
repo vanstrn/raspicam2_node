@@ -4,6 +4,7 @@
 #include "interface/mmal/util/mmal_connection.h"
 
 #include <memory>
+#include <functional>
 
 namespace mmal
 {
