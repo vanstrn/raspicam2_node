@@ -1,6 +1,7 @@
 #include <RasPiCamPublisherNode.hpp>
 
-RasPiCamPublisher::RasPiCamPublisher() : Node("raspicam2", "camera", true) {
+RasPiCamPublisher::RasPiCamPublisher(rclcpp::NodeOptions options)
+  : Node("raspicam2", "camera", options.use_intra_process_comms(true)) {
     state = std::make_shared<RASPIVID_STATE>();
 
     configure_parameters(*state);
@@ -44,7 +45,7 @@ RasPiCamPublisher::RasPiCamPublisher() : Node("raspicam2", "camera", true) {
     buffer_callback_t cb_raw = nullptr;
     pub_img = nullptr;
     if(state->enable_raw_pub) {
-        pub_img = create_publisher<sensor_msgs::msg::Image>("image");
+        pub_img = create_publisher<sensor_msgs::msg::Image>("image", rclcpp::QoS(1));
         cb_raw = std::bind(&RasPiCamPublisher::onImageRaw, this, std::placeholders::_1, std::placeholders::_2);
     }
 
@@ -86,8 +87,8 @@ RasPiCamPublisher::RasPiCamPublisher() : Node("raspicam2", "camera", true) {
     get_parameter_or("analog_gain", state->camera_parameters.awb_gains_r, 0.0f);
     get_parameter_or("digital_gain", state->camera_parameters.awb_gains_b, 0.0f);
 
-    pub_img_compressed = create_publisher<sensor_msgs::msg::CompressedImage>("image/compressed");
-    pub_info = create_publisher<sensor_msgs::msg::CameraInfo>("image/camera_info");
+    pub_img_compressed = create_publisher<sensor_msgs::msg::CompressedImage>("image/compressed", rclcpp::QoS(1));
+    pub_info = create_publisher<sensor_msgs::msg::CameraInfo>("image/camera_info", rclcpp::QoS(1));
     srv_info = create_service<sensor_msgs::srv::SetCameraInfo>("set_camera_info",
         std::bind(&RasPiCamPublisher::set_camera_info, this,
         std::placeholders::_1, std::placeholders::_2));
@@ -113,7 +114,7 @@ void RasPiCamPublisher::onImageRaw(const uint8_t* start, const uint8_t* end) {
     msg->header.stamp = tnow;
     msg->encoding = "rgb8";
     msg->data.insert(msg->data.end(), start, end);
-    pub_img->publish(msg);
+    pub_img->publish(std::move(msg));
 
     camera_info.header.frame_id = "camera";
     camera_info.header.stamp = tnow;
@@ -130,7 +131,7 @@ void RasPiCamPublisher::onImageCompressed(const uint8_t* start, const uint8_t* e
     // set raw compressed data
     msg->format = "jpeg";
     msg->data.insert(msg->data.end(), start, end);
-    pub_img_compressed->publish(msg);
+    pub_img_compressed->publish(std::move(msg));
 
     camera_info.header.frame_id = "camera";
     camera_info.header.stamp = tnow;
@@ -147,5 +148,5 @@ void RasPiCamPublisher::set_camera_info(
     res->success = true;
 }
 
-#include <class_loader/register_macro.hpp>
-CLASS_LOADER_REGISTER_CLASS(RasPiCamPublisher, rclcpp::Node)
+#include <rclcpp_components/register_node_macro.hpp>
+RCLCPP_COMPONENTS_REGISTER_NODE(RasPiCamPublisher)

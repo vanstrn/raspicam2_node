@@ -11,9 +11,7 @@
 
 class RasPiCamPublisher : public rclcpp::Node {
 public:
-    //COMPOSITION_PUBLIC
-
-    RasPiCamPublisher();
+    RasPiCamPublisher(rclcpp::NodeOptions options = rclcpp::NodeOptions());
 
     ~RasPiCamPublisher();
 

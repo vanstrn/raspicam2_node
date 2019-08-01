@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(class_loader REQUIRED)
 
@@ -36,7 +37,7 @@ target_link_libraries(raspicam raspicam_common)
 add_library(RasPiCamPublisherNode SHARED src/RasPiCamPublisherNode.cpp)
 ament_target_dependencies(RasPiCamPublisherNode rclcpp sensor_msgs class_loader)
 target_link_libraries(RasPiCamPublisherNode raspicam)
-rclcpp_register_node_plugins(RasPiCamPublisherNode "RasPiCamPublisher")
+rclcpp_components_register_nodes(RasPiCamPublisherNode "RasPiCamPublisher")
 
 add_executable(raspicam2_node src/raspicam2_node.cpp)
 target_link_libraries(raspicam2_node RasPiCamPublisherNode)
