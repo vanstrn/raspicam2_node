@@ -3,6 +3,13 @@
 ROS2 node for the Raspberry Pi Camera Module. Works with both the V1.x and V2.x versions of the module. We recommend using the v2.x cameras as they have better auto gain, and the general image quality is better.
 
 ## Build Intructions
+1. On Ubuntu: Install the VideoCore libraries. Since these conflict with packages `libgles2-mesa-dev` and `mesa-common-dev`, you have to remove those one first.
+```
+sudo apt autoremove --purge libgles2-mesa-dev mesa-common-dev
+sudo add-apt-repository ppa:ubuntu-pi-flavour-makers/ppa
+sudo apt install libraspberrypi-bin libraspberrypi-dev
+```
+2. Change to the workspace and build:
 ```
 colcon build
 ```
