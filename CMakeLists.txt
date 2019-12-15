@@ -15,7 +15,6 @@ FIND_LIBRARY(mmalutil_LIBS REQUIRED NAMES mmal_util PATHS /opt/vc/lib)
 FIND_LIBRARY(mmalvcclient_LIBS REQUIRED NAMES mmal_vc_client PATHS /opt/vc/lib)
 FIND_LIBRARY(vcos_LIBS REQUIRED NAMES vcos PATHS /opt/vc/lib)
 FIND_LIBRARY(bcmhost_LIBS REQUIRED NAMES bcm_host PATHS /opt/vc/lib)
-FIND_LIBRARY(vchostif_LIBS REQUIRED NAMES vchostif PATHS /opt/vc/lib)
 
 include_directories(include /opt/vc/include)
 
@@ -28,7 +27,8 @@ add_library(raspicam_common STATIC
     src/RaspiGPS.c
     src/libgps_loader.c
 )
-target_link_libraries(raspicam_common ${bcmhost_LIBS} ${vcos_LIBS} ${mmal_LIBS} ${mmalcore_LIBS} ${mmalutil_LIBS} ${mmalvcclient_LIBS} ${vchostif_LIBS})
+
+target_link_libraries(raspicam_common ${bcmhost_LIBS} ${vcos_LIBS} ${mmal_LIBS} ${mmalcore_LIBS} ${mmalutil_LIBS} ${mmalvcclient_LIBS})
 
 add_library(raspicam STATIC src/raspicam.cpp)
 target_link_libraries(raspicam raspicam_common)
