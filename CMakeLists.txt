@@ -30,7 +30,7 @@ add_library(raspicam_common STATIC
 
 target_link_libraries(raspicam_common ${bcmhost_LIBS} ${vcos_LIBS} ${mmal_LIBS} ${mmalcore_LIBS} ${mmalutil_LIBS} ${mmalvcclient_LIBS})
 
-add_library(raspicam STATIC src/raspicam.cpp)
+add_library(raspicam SHARED src/raspicam.cpp)
 target_link_libraries(raspicam raspicam_common)
 
 # composable ros node
@@ -43,7 +43,7 @@ add_executable(raspicam2_node src/raspicam2_node.cpp)
 target_link_libraries(raspicam2_node RasPiCamPublisherNode)
 
 install(TARGETS
-    RasPiCamPublisherNode
+    RasPiCamPublisherNode raspicam
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin
