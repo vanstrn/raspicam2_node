@@ -15,6 +15,8 @@ colcon build
 ```
 
 ## Running the Node
+1. Activate the camera via `raspi-config` (`sudo apt install raspi-config`)
+2. source the workspace and start the node executable
 ```
 source install/setup.bash
 ros2 run raspicam2 raspicam2_node __params:=`ros2 pkg prefix raspicam2`/share/raspicam2/cfg/params.yaml
