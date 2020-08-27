@@ -150,6 +150,8 @@ void RasPiCamPublisher::onImageRaw(const uint8_t* start, const uint8_t* end) {
     msg->header.stamp = tnow;
     msg->encoding = "rgb8";
     msg->data.insert(msg->data.end(), start, end);
+    msg->height = camera_info.height;
+    msg->width = camera_info.width;
     pub_img->publish(std::move(msg));
 
     camera_info.header.frame_id = "camera";
