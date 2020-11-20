@@ -1055,6 +1055,7 @@ int start_capture(RASPIVID_STATE& state) {
     }
   }
   // Send all the buffers to the splitter output port
+  ROS_INFO("Raw Pub (%d, )\n", state.enable_raw_pub);
   if (state.enable_raw_pub) {
     int num = mmal_queue_length(state.splitter_pool->queue);
     int q;
